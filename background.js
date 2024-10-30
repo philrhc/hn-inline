@@ -2,11 +2,13 @@ class TabListener {
 
   setLink(link) {
     this.link = link;
+    this.ran = false; 
   }
 
   onUpdate = async (tabId, changeInfo, tab) => {
-    if (tab.url == this.link.url && changeInfo.status == "complete") {
-      console.log("hello new page");
+    if (this.ran == false //only run once per page
+        && tab.url == this.link.url 
+        && changeInfo.status == "complete") {
       const quoteComments = await getQuoteComments(this.link.id);
       if (quoteComments.length > 0) {
         await chrome.scripting.insertCSS({
@@ -21,6 +23,7 @@ class TabListener {
           command: "highlight",
           data: quoteComments
         });
+        this.ran = true;
       }
     }
   }
