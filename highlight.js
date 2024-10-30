@@ -48,7 +48,10 @@ function findComment(comment) {
 function recombineComment(splitComment) {
   let comment = "";
   for (var i = 0; i < splitComment.length; i++) {
-    comment += splitComment[i] + '<br />';
+    comment += splitComment[i];
+    if (i != splitComment.length - 1) {
+      comment += '<br />';
+    }
   }
   return comment;
 }
@@ -61,10 +64,10 @@ function decodeHtml(html) {
 
 //find element to insert highlight
 function matchElement(quote) {
-  
+
   xpaths = [
-    `//p[contains(normalize-space(text()),'${quote}')]`, //first attempt to find p element containing text
-    `//text()[contains(normalize-space(.),'${quote}')]`,  //now try all text elements TODO: optimise to ignore the previously searched kids of p
+    `//p[contains(normalize-space(text()),"${quote}")]`, //first attempt to find p element containing text
+    `//text()[contains(normalize-space(.),"${quote}")]`,  //now try all text elements TODO: optimise to ignore the previously searched kids of p
   ];
 
   for (const xpath of xpaths) {
@@ -84,7 +87,7 @@ function highlight(quote, author, comment, link) {
     return;
   }
 
-  let allText = matchingElement.textContent;
+  let allText = matchingElement.textContent.replace(/\n/g, ' ');
   let textBefore = allText.split(quote)[0];
   let textAfter = allText.split(quote)[1];
   
@@ -106,7 +109,16 @@ function highlight(quote, author, comment, link) {
   highlightDiv.appendChild(extensionDiv);
 
   const container = document.createElement('div');
-  container.replaceChildren(textBefore, highlightDiv, textAfter)
+  if (textBefore != undefined) {
+    container.appendChild(document.createTextNode(textBefore));
+  }
+  container.appendChild(highlightDiv);
+  if (textAfter != undefined) {
+    container.appendChild(document.createTextNode(textAfter));
+  }
+  else {
+    document.createTextNode('');
+  }
   matchingElement.replaceWith(container);
 }
 
