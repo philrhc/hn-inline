@@ -62,14 +62,11 @@ function decodeHtml(html) {
   return txt.value;
 }
 
-//find element to insert highlight
 function matchElement(quote) {
-
   xpaths = [
     `//p[contains(normalize-space(text()),"${quote}")]`, //first attempt to find p element containing text
     `//text()[contains(normalize-space(.),"${quote}")]`,  //now try all text elements TODO: optimise to ignore the previously searched kids of p
   ];
-
   for (const xpath of xpaths) {
     var matchingElement = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null)
     if (matchingElement.singleNodeValue != null) {
@@ -79,8 +76,6 @@ function matchElement(quote) {
 }
 
 function highlight(quote, author, comment, link) {
-  console.log(quote);
-
   const matchingElement = matchElement(quote);
   if (matchingElement == undefined) {
     console.log("Did not find: " + quote);
