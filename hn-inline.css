@@ -1,6 +1,6 @@
 .hn-inline-highlight {
   position: relative;
-  display: inline-block;
+  display: inline;
   background: rgba(255, 102, 0, 0.4);
 }
 
@@ -8,7 +8,7 @@
   opacity: 1;
 }
 
-.hn-inline-extension {
+.hn-inline-highlight .hn-inline-extension {
   opacity: 0;
   font-size: 9pt !important;
   font-family: Verdana, Geneva, sans-serif !important;
@@ -25,6 +25,7 @@
   background: #f6f6ef;
   z-index: 1000000000000;
   border-top: 0.3em solid #FF6600;
+  pointer-events: none;
 }
 
 .hn-inline-extension::before {
