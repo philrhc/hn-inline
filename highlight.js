@@ -41,14 +41,9 @@ function findQuote(comment) {
 }
 
 function findComment(comment) {
-    const split = comment.split("<p>").slice(1);
-    const recombined = recombineComment(split);
-    const decoded = decodeHtml(recombined);
+    const quoteRemoved = comment.split("<p>").slice(1).join('<br />');
+    const decoded = decodeHtml(quoteRemoved);
     return decoded.trim();
-}
-
-function recombineComment(splitComment) {
-    return splitComment.join('<br />');
 }
 
 function decodeHtml(htmlString) {
