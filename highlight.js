@@ -3,84 +3,81 @@
 
     async function insertComments(inlineComments) {
         console.log(inlineComments);
-        for (var i = 0; i < inlineComments.length; i++) {
-          let comment = inlineComments[i];
-          let author = comment.author;
-          let text = comment.comment_text;
-          let link = linkToComment(comment.objectID)
-          let quote = findQuote(text);
-          let commentOnQuote = findComment(text);
-          highlight(quote, author, commentOnQuote, link);
+
+        inlineComments.sort((a, b) => findQuote(b.comment_text).length - findQuote(a.comment_text).length);
+
+        for (let comment of inlineComments) {
+            const { author, comment_text: text, objectID } = comment;
+            const link = linkToComment(objectID);
+            const quote = findQuote(text);
+            const commentOnQuote = findComment(text);
+            highlight(quote, author, commentOnQuote, link);
         }
-      }
+    }
 
     chrome.runtime.onMessage.addListener((message) => {
-      if (message.command === "highlight") {
-        insertComments(message.data);
-      }
+        if (message.command === "highlight") {
+            insertComments(message.data);
+        }
     });
 })();
 
 function linkToComment(commentId) {
-  return "https://news.ycombinator.com/item?id=" + commentId
+    return `https://news.ycombinator.com/item?id=${commentId}`;
 }
 
 function findQuote(comment) {
-  let split = comment.split("<p>")[0];
-  let indentRemoved = split.replace("&gt;", "");
-  let quotesRemoved = indentRemoved.replace("&quot;", "");
-  let decoded = decodeHtml(quotesRemoved)
-  let quotedAgainRemoved = decoded.replace('"', "");
-  let trimmed = quotedAgainRemoved.trim();
-  return trimmed;
+    const split = comment.split("<p>")[0];
+    const decoded = decodeHtml(split);
+
+    // Remove the indent char and the whitespace formatting
+    const indentRemoved = decoded.replace(">", "").trim();
+
+    // Commenters sometimes then use quotes
+    if (indentRemoved.startsWith('"') && indentRemoved.endsWith('"')) {
+        return indentRemoved.slice(1, -1); // Remove the quote
+    }
+    return indentRemoved;
 }
 
 function findComment(comment) {
-  let split = comment.split("<p>").slice(1);
-  let recombined = recombineComment(split);
-  let decoded = decodeHtml(recombined);
-  let quotedAgainRemoved = decoded.replace('"', "");
-  let trimmed = quotedAgainRemoved.trim();
-  return trimmed;
+    const split = comment.split("<p>").slice(1);
+    const recombined = recombineComment(split);
+    const decoded = decodeHtml(recombined);
+    return decoded.trim();
 }
 
 function recombineComment(splitComment) {
-  let comment = "";
-  for (var i = 0; i < splitComment.length; i++) {
-    comment += splitComment[i];
-    if (i != splitComment.length - 1) {
-      comment += '<br />';
-    }
-  }
-  return comment;
+    return splitComment.join('<br />');
 }
 
-function decodeHtml(html) {
-  var txt = document.createElement("textarea");
-  txt.innerHTML = html;
-  return txt.value;
+function decodeHtml(htmlString) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlString, 'text/html');
+    return doc.documentElement.textContent;
 }
 
 function matchElement(quote) {
-  xpaths = [
-    `//p[contains(normalize-space(text()),"${quote}")]`, //first attempt to find p element containing text
-    `//text()[contains(normalize-space(.),"${quote}")]`,  //now try all text elements TODO: optimise to ignore the previously searched kids of p
-    `//div[contains(normalize-space(text()),"${quote}")]`, //try divs
-  ];
-  for (const xpath of xpaths) {
-    var matchingElement = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null)
-    if (matchingElement.singleNodeValue != null) {
-      return matchingElement.singleNodeValue;
+    const quoteEscaped = quote.replace(/"/g, '&quot;');
+
+    const xpaths = [
+        `//p[contains(normalize-space(text()),"${quoteEscaped}")]`, // First attempt to find p element containing text
+        `//text()[contains(normalize-space(.),"${quoteEscaped}")]`,  // Now try all text elements
+    ];
+    for (const xpath of xpaths) {
+        const matchingElement = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+        if (matchingElement.singleNodeValue != null) {
+            return matchingElement.singleNodeValue;
+        }
     }
-  } 
 }
 
 function highlight(quote, author, comment, link) {
-  const matchingElement = matchElement(quote);
-  if (matchingElement == undefined) {
-    console.log("Did not find: " + quote);
-    return;
-  }
+    const matchingElement = matchElement(quote);
+    if (!matchingElement) {
+        console.log("Did not find: " + quote);
+        return;
+    }
 
     const allText = matchingElement.textContent.replace(/\n/g, ' ');
     const [textBefore, textAfter] = allText.split(quote);
@@ -99,22 +96,19 @@ function highlight(quote, author, comment, link) {
     addText(commentTextDiv, comment);
     commentDiv.appendChild(extensionHeaderDiv);
     commentDiv.appendChild(commentTextDiv);
-    extensionDiv.appendChild(commentDiv)
+    extensionDiv.appendChild(commentDiv);
     highlightDiv.appendChild(document.createTextNode(quote));
     highlightDiv.appendChild(extensionDiv);
 
-  const container = document.createElement('div');
-  if (textBefore) {
-    container.appendChild(document.createTextNode(textBefore));
-  }
-  container.appendChild(highlightDiv);
-  if (textAfter) {
-    container.appendChild(document.createTextNode(textAfter));
-  }
-  else {
-    document.createTextNode('');
-  }
-  matchingElement.replaceWith(container);
+    const container = document.createElement('div');
+    if (textBefore) {
+        container.appendChild(document.createTextNode(textBefore));
+    }
+    container.appendChild(highlightDiv);
+    if (textAfter) {
+        container.appendChild(document.createTextNode(textAfter));
+    }
+    matchingElement.replaceWith(container);
 }
 
 function createAuthorElement(author) {
@@ -129,22 +123,9 @@ function addText(node, text) {
         if (part.trim()) node.appendChild(document.createTextNode(part));
     });
 }
-function addText(node,text){     
-  var t=text.split(/\s*<br ?\/?>\s*/i),
-      i;
-  if(t[0].length>0){         
-    node.appendChild(document.createTextNode(t[0]));
-  }
-  for(i=1;i<t.length;i++){
-     node.appendChild(document.createElement('BR'));
-     if(t[i].length>0){
-       node.appendChild(document.createTextNode(t[i]));
-     }
-  } 
-}   
 
 function divWithClassName(className) {
-  const div = document.createElement("div")
-  div.className = className;
-  return div
+    const div = document.createElement("div");
+    div.className = className;
+    return div;
 }

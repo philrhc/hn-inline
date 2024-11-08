@@ -1,11 +1,5 @@
+.hn-inline-highlight,
 .hn-inline-highlight > * {
-  position: relative;
-  display: inline;
-  background: rgba(255, 102, 0, 0.4);
-  cursor: pointer;
-}
-
-.hn-inline-highlight {
   position: relative;
   display: inline;
   background: rgba(255, 102, 0, 0.4);
