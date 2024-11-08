@@ -23,6 +23,11 @@
 })();
 
 function linkToComment(commentId) {
+    // Validate that commentId is a number
+    if (!/^\d+$/.test(commentId)) {
+        console.error("Invalid commentId: must be a number");
+        return null;
+    }
     return `https://news.ycombinator.com/item?id=${commentId}`;
 }
 
@@ -78,9 +83,11 @@ function highlight(quote, author, comment, link) {
     const [textBefore, textAfter] = allText.split(quote);
 
     const highlightDiv = divWithClassName("hn-inline-highlight");
-    highlightDiv.addEventListener("click", () => {
-        window.location.href = link;
-    });
+    if (link) {
+        highlightDiv.addEventListener("click", () => {
+            window.location.href = link;
+        });
+    }
 
     const extensionDiv = divWithClassName("hn-inline-extension");
     const extensionHeaderDiv = divWithClassName("hn-inline-extension-header");
