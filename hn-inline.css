@@ -1,3 +1,10 @@
+.hn-inline-highlight > * {
+  position: relative;
+  display: inline;
+  background: rgba(255, 102, 0, 0.4);
+  cursor: pointer;
+}
+
 .hn-inline-highlight {
   position: relative;
   display: inline;
@@ -5,11 +12,15 @@
   cursor: pointer;
 }
 
-.hn-inline-highlight:hover .hn-inline-extension {
+.hn-inline-highlight:hover {
+  background: rgba(255, 102, 0, 0.8);
+}
+
+.hn-inline-highlight:hover > .hn-inline-extension {
   opacity: 1;
 }
 
-.hn-inline-highlight .hn-inline-extension {
+.hn-inline-extension {
   opacity: 0;
   font-size: 9pt !important;
   font-family: Verdana, Geneva, sans-serif !important;
@@ -61,7 +72,7 @@
   text-decoration: underline !important;
 }
 
-.hn-inline-comment {
+.hn-inline-comment-text {
   margin: 0 1em 1em !important; 
   font-family: Verdana, Geneva, sans-serif !important;
 }

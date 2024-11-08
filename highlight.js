@@ -14,7 +14,6 @@
         }
       }
 
-
     chrome.runtime.onMessage.addListener((message) => {
       if (message.command === "highlight") {
         insertComments(message.data);
@@ -66,6 +65,7 @@ function matchElement(quote) {
   xpaths = [
     `//p[contains(normalize-space(text()),"${quote}")]`, //first attempt to find p element containing text
     `//text()[contains(normalize-space(.),"${quote}")]`,  //now try all text elements TODO: optimise to ignore the previously searched kids of p
+    `//div[contains(normalize-space(text()),"${quote}")]`, //try divs
   ];
   for (const xpath of xpaths) {
     var matchingElement = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null)
@@ -82,33 +82,33 @@ function highlight(quote, author, comment, link) {
     return;
   }
 
-  let allText = matchingElement.textContent.replace(/\n/g, ' ');
-  let textBefore = allText.split(quote)[0];
-  let textAfter = allText.split(quote)[1];
-  
-  const highlightDiv = divWithClassName("hn-inline-highlight");
-  highlightDiv.addEventListener("click", function() {
-    window.location.href = link;
-  });
-  const quotedTextNode = document.createTextNode(quote);
-  const extensionDiv = divWithClassName("hn-inline-extension");
-  const extensionHeaderDiv = divWithClassName("hn-inline-extension-header");
-  const authorA = document.createElement("a");
-  authorA.innerText = author;
-  extensionHeaderDiv.appendChild(authorA);
-  const commentDiv = divWithClassName("hn-inline-comment")
-  addText(commentDiv, comment);
-  extensionDiv.appendChild(extensionHeaderDiv);
-  extensionDiv.appendChild(commentDiv);
-  highlightDiv.appendChild(quotedTextNode);
-  highlightDiv.appendChild(extensionDiv);
+    const allText = matchingElement.textContent.replace(/\n/g, ' ');
+    const [textBefore, textAfter] = allText.split(quote);
+
+    const highlightDiv = divWithClassName("hn-inline-highlight");
+    highlightDiv.addEventListener("click", () => {
+        window.location.href = link;
+    });
+
+    const extensionDiv = divWithClassName("hn-inline-extension");
+    const extensionHeaderDiv = divWithClassName("hn-inline-extension-header");
+    const commentDiv = document.createElement('div');
+    extensionHeaderDiv.appendChild(createAuthorElement(author));
+
+    const commentTextDiv = divWithClassName("hn-inline-comment-text");
+    addText(commentTextDiv, comment);
+    commentDiv.appendChild(extensionHeaderDiv);
+    commentDiv.appendChild(commentTextDiv);
+    extensionDiv.appendChild(commentDiv)
+    highlightDiv.appendChild(document.createTextNode(quote));
+    highlightDiv.appendChild(extensionDiv);
 
   const container = document.createElement('div');
-  if (textBefore != undefined) {
+  if (textBefore) {
     container.appendChild(document.createTextNode(textBefore));
   }
   container.appendChild(highlightDiv);
-  if (textAfter != undefined) {
+  if (textAfter) {
     container.appendChild(document.createTextNode(textAfter));
   }
   else {
@@ -117,6 +117,18 @@ function highlight(quote, author, comment, link) {
   matchingElement.replaceWith(container);
 }
 
+function createAuthorElement(author) {
+    const authorA = document.createElement("a");
+    authorA.innerText = author;
+    return authorA;
+}
+
+function addText(node, text) {
+    text.split(/<br\s*\/?>/i).forEach((part, index) => {
+        if (index > 0) node.appendChild(document.createElement('br'));
+        if (part.trim()) node.appendChild(document.createTextNode(part));
+    });
+}
 function addText(node,text){     
   var t=text.split(/\s*<br ?\/?>\s*/i),
       i;

@@ -5,9 +5,10 @@ class TabListener {
     this.ran = false; 
   }
 
-  onUpdate = async (tabId, changeInfo, tab) => {
-    if (this.ran == false //only run once per page
-        && tab.url == this.link.url 
+  onUpdate = async (_, changeInfo, tab) => {
+    //only run once per page
+    if (this.ran == false 
+        && tab.url == this.link.url
         && changeInfo.status == "complete") {
       const quoteComments = await getQuoteComments(this.link.id);
       if (quoteComments.length > 0) {
@@ -39,13 +40,6 @@ chrome.runtime.onMessage.addListener(
     }
   }
 );
-
-//not necessary right now - may as well listen on all tabs
-async function getCurrentTab() {
-      let queryOptions = { active: true, lastFocusedWindow: true };
-      let [tab] = await chrome.tabs.query(queryOptions);
-      return tab;
-}
 
 async function getQuoteComments(submissionId) {
   console.log("Getting comments on submissionId: " + submissionId);
