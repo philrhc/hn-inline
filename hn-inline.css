@@ -24,7 +24,6 @@
   top: 0;
   left: 105%;
   width: 20em;
-  background: red;
   height: auto;
   background: none;
   border: 1px solid #ccc;
@@ -67,6 +66,7 @@
 }
 
 .hn-inline-comment-text {
+  color: black !important;
   margin: 0 1em 1em !important; 
   font-family: Verdana, Geneva, sans-serif !important;
 }
