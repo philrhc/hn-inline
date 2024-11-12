@@ -1,17 +1,31 @@
+class Comment {
+    constructor(author, comment, link) {
+        this.author = author;
+        this.comment = comment;
+        this.link = link;
+    }
+}
+
 (function() {
-    console.log("script injected");
+    console.log("hn inline comments loaded");
 
     async function insertComments(inlineComments) {
-        console.log(inlineComments);
+        inlineComments.sort((a, b) => findQuote(a.comment_text).length - findQuote(b.comment_text).length);
 
-        inlineComments.sort((a, b) => findQuote(b.comment_text).length - findQuote(a.comment_text).length);
-
-        for (let comment of inlineComments) {
-            const { author, comment_text: text, objectID } = comment;
-            const link = linkToComment(objectID);
-            const quote = findQuote(text);
-            const commentOnQuote = findComment(text);
-            highlight(quote, author, commentOnQuote, link);
+        while (inlineComments.length > 0) {
+            const comment = inlineComments.pop();
+            const quote = findQuote(comment.comment_text);
+            const associatedComments = [new Comment(comment.author, findComment(comment.comment_text), linkToComment(comment.objectID))];
+            for (let i = 0; i < inlineComments.length; i++) {
+                const each = inlineComments[i];
+                otherQuote = findQuote(each.comment_text);
+                if (quote.includes(otherQuote)) {
+                    inlineComments.splice(i, 1);
+                    associatedComments.push(new Comment(each.author, findComment(each.comment_text), linkToComment(each.objectID)));
+                    i--; // Adjust index after removal
+                }
+            }
+            highlightMultiple(quote, associatedComments);
         }
     }
 
@@ -72,7 +86,7 @@ function matchElement(quote) {
     }
 }
 
-function highlight(quote, author, comment, link) {
+function highlightMultiple(quote, associatedComments) {
     const matchingElement = matchElement(quote);
     if (!matchingElement) {
         console.log("Did not find: " + quote);
@@ -83,22 +97,24 @@ function highlight(quote, author, comment, link) {
     const [textBefore, textAfter] = allText.split(quote);
 
     const highlightDiv = divWithClassName("hn-inline-highlight");
-    if (link) {
+    if (associatedComments[0].link) {
         highlightDiv.addEventListener("click", () => {
             window.location.href = link;
         });
     }
 
     const extensionDiv = divWithClassName("hn-inline-extension");
-    const extensionHeaderDiv = divWithClassName("hn-inline-extension-header");
-    const commentDiv = document.createElement('div');
-    extensionHeaderDiv.appendChild(createAuthorElement(author));
-
-    const commentTextDiv = divWithClassName("hn-inline-comment-text");
-    addText(commentTextDiv, comment);
-    commentDiv.appendChild(extensionHeaderDiv);
-    commentDiv.appendChild(commentTextDiv);
-    extensionDiv.appendChild(commentDiv);
+    for (const each of associatedComments) {
+        const extensionHeaderDiv = divWithClassName("hn-inline-extension-header");
+        extensionHeaderDiv.appendChild(createAuthorElement(each.author));
+        const commentTextDiv = divWithClassName("hn-inline-comment-text");
+        addText(commentTextDiv, each.comment);
+        const commentDiv = document.createElement('div');
+        commentDiv.appendChild(extensionHeaderDiv);
+        commentDiv.appendChild(commentTextDiv);
+        extensionDiv.appendChild(commentDiv);
+    }
+    
     highlightDiv.appendChild(document.createTextNode(quote));
     highlightDiv.appendChild(extensionDiv);
 
