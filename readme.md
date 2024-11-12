@@ -13,6 +13,8 @@ The content script listens for a click on an article and then messages the backg
 
 because of the permissions required to work, i probably won’t package this up and distribute it. If you would like to use it in chrome, you can easily add the folder as an unpackaged extension, firefox makes this a little more tricky, it can be built using web-ext, i use it from here: https://addons.mozilla.org/en-US/firefox/addon/hn-inline/
 
+the manifest.json is set up for chrome right now, for firefox the manifest is in /manifests/firefox.json
+
 there is a bug when quotes overlap but apart from that I am happy with the success rate.
 
 the icons were made by https://caballe.ro/
