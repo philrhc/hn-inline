@@ -15,4 +15,4 @@ because of the permissions required to work, i probably won’t package this up 
 
 there is a bug when quotes overlap but apart from that I am happy with the success rate.
 
-
+the icons were made by https://caballe.ro/
